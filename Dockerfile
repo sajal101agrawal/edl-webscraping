@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.8
+FROM python:3.11.7
 
 # Set the working directory in the container
 WORKDIR /app
@@ -9,10 +9,10 @@ COPY . /app
 
 # Create a virtual environment and activate it
 RUN python -m venv venv
-RUN /bin/bash -c "source venv/bin/activate"
 
+RUN python -m pip install --upgrade pip
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN /app/venv/bin/pip install --no-cache-dir -r /app/requirements.txt
 
 # Set the environment variable
 ENV PORT=8765
