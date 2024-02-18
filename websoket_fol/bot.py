@@ -1,16 +1,15 @@
-from audioop import avg
 import random, time, os, json, asyncio
 from selenium_stealth import stealth
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.action_chains import ActionChains
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
-
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+from concurrent.futures import ThreadPoolExecutor
 
 import random, time
 
@@ -60,8 +59,11 @@ class Bot:
             options.add_argument("--ignore-certificate-errors")
             options.add_argument("--enable-javascript")
             options.add_argument("--enable-popup-blocking")
+            options.add_argument("--no-sandbox")  # Set webdriver language to English.
+            options.add_argument("--headless")
+            options.add_argument("--disable-dev-shm-usage")
             try:
-                driver = webdriver.Chrome()
+                driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)
                 driver.get("https://www.google.com")
                 # breakpoint()
                 # with open('cookies.pkl', 'rb') as file: cookies = pickle.load(file)
@@ -104,7 +106,8 @@ class Bot:
             options.add_argument("--enable-javascript")
             options.add_argument("--enable-popup-blocking")
             try:
-                driver = Chrome(options=options, version_main=119, headless=False)
+                breakpoint()
+                driver = Chrome(options=options, version_main=121)
                 driver.get("https://www.google.com")
                 break
             except Exception as e:
