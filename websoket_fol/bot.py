@@ -116,41 +116,6 @@ class Bot:
         return self.driver
 
     def find_element(
-        self,
-        element,
-        locator,
-        locator_type=By.XPATH,
-        page=None,
-        timeout=10,
-        condition_func=EC.presence_of_element_located,
-        condition_other_args=tuple(),
-    ):
-        """Find an element, then return it or None.
-        If timeout is less than or requal zero, then just find.
-        If it is more than zero, then wait for the element present.
-        """
-        try:
-            if timeout > 0:
-                wait_obj = WebDriverWait(self.driver, timeout)
-                ele = wait_obj.until(
-                    EC.presence_of_element_located((locator_type, locator))
-                )
-                # ele = wait_obj.until( condition_func((locator_type, locator),*condition_other_args))
-            else:
-                print(f"Timeout is less or equal zero: {timeout}")
-                ele = self.driver.find_element(by=locator_type, value=locator)
-            if page:
-                print(f'Found the element "{element}" in the page "{page}"')
-            else:
-                print(f"Found the element: {element}")
-            return ele
-        except Exception as e:
-            if page:
-                print(f'Cannot find the element "{element}"' f' in the page "{page}"')
-            else:
-                print(f"Cannot find the element: {element}")
-
-    def find_element(
         self, element, locator, locator_type=By.XPATH, timeout=10, page=None, bulk=False
     ):
         """
@@ -338,7 +303,8 @@ class Bot:
                 try:
                     self.driver.switch_to.frame(iframe)
                     random_sleep()
-                    all_btn_id = ['group_f0000005','group_f0000007', 'group_f0000008','group_f0000009', 'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d']
+                    all_btn_id = ['group_f0000005','group_f0000007', 'group_f0000008','group_f0000009',
+                                   'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d']
                     for id in all_btn_id:
                         self.driver.find_element(By.ID,id).click()
                         random_sleep(1,2)
@@ -387,12 +353,10 @@ class Bot:
         
         data = {}
         for key, value in variabless.items():
-            try:
-                if isinstance(value, dict):
-                    data[key] = self.scrap_data1(value)
-                else :
-                    data[key] = self.scrap_data2(value)
-            except:pass
+            if isinstance(value, dict):
+                data[key] = self.scrap_data2(value)
+            else :
+                data[key] = self.scrap_data1(value)
         return data
 
     async def return_main_data_for_all_windows_parallel_helper(self, win):

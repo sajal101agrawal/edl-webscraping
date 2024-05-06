@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import json, datetime
 from bot import Bot
-import os
+import time
 # Initialize bot
 print(__name__)
 connected = set()
@@ -12,6 +12,7 @@ bot_.work()
 
 
 connected = set()
+time.sleep(10)
 print('websocket start')
 async def echo(websocket, path):
     connected.add(websocket)
