@@ -60,7 +60,6 @@ class Bot:
             options.add_argument("--enable-javascript")
             options.add_argument("--enable-popup-blocking")
             options.add_argument("--no-sandbox")  # Set webdriver language to English.
-            options.add_argument("--headless")
             options.add_argument("--disable-dev-shm-usage")
             try:
                 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)
@@ -89,7 +88,7 @@ class Bot:
             options.add_argument("--mute-audio")
             options.add_argument("--ignore-gpu-blocklist")
             options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--headless")
+            # options.add_argument("--headless")
             prefs = {
                 "credentials_enable_service": True,
                 "profile.default_content_setting_values.automatic_downloads": 1,
@@ -289,8 +288,6 @@ class Bot:
 
     
     def work(self):
-        data = {}
-        numbers_tr = 0
         numbers_tr_ele = []
         l_tr_table = []
         engines_links = []
@@ -302,7 +299,6 @@ class Bot:
         if tbody:
             tbody = tbody[0]
             numbers_tr_ele = tbody.find_elements(By.TAG_NAME, "tr")
-            numbers_tr = len(numbers_tr_ele)
 
         for tr_tag in numbers_tr_ele:
             tr_a_tag = tr_tag.find_elements(
@@ -334,110 +330,26 @@ class Bot:
                 self.driver.back()
                 self.driver.refresh()
 
-        kw_li_ele = []
-        kw_li_url = []
         for use_link in engines_links:
             self.driver.get(use_link)
             iframe = ""
             iframe = self.find_element("iframe", "iframe", By.TAG_NAME)
             if iframe:
-                self.driver.switch_to.frame(iframe)
-                # for i in self.driver.find_elements(By.TAG_NAME,'g') :
-                #     if i.get_attribute('id').startswith('group_') :
-                #         inside_img = i.find_elements(By.TAG_NAME,'image')
-                #         if inside_img :
-                #             if inside_img[0].get_attribute('xlink:href') != 'https://div.edl.ch/www/95b5638459623fa2d87d41fd42ff9d4e/pic/Promos_MasterSchalter_AKS_passiv.jpg' :
-                #                 kw_li_ele.append(i)
-
-                random_sleep()
-                kw_li_ele = [
-                    i
-                    for i in self.driver.find_elements(By.TAG_NAME, "g")
-                    if i.find_elements(By.TAG_NAME, "g")
-                    and i.find_element(By.TAG_NAME, "g").find_elements(
-                        By.TAG_NAME, "rect"
-                    )
-                ][4:-3]
-                for ii_ in range(len(kw_li_ele)):
-                    kw_li_ele = [
-                        i
-                        for i in self.driver.find_elements(By.TAG_NAME, "g")
-                        if i.find_elements(By.TAG_NAME, "g")
-                        and i.find_element(By.TAG_NAME, "g").find_elements(
-                            By.TAG_NAME, "rect"
-                        )
-                    ][4:-3]
-                    ii = kw_li_ele[ii_]
-                    try:
-                        ii.click()
-                        random_sleep()
-                        self.driver.switch_to.window(self.driver.window_handles[-1])
-                        kw_li_url.append(self.driver.current_url)
-                        # self.driver.close()
-                    except:
+                try:
+                    self.driver.switch_to.frame(iframe)
+                    random_sleep()
+                    all_btn_id = ['group_f0000005','group_f0000007', 'group_f0000008','group_f0000009', 'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d']
+                    for id in all_btn_id:
+                        self.driver.find_element(By.ID,id).click()
+                        random_sleep(1,2)
+                except:
                         ...
-                    finally:
-                        self.driver.switch_to.window(self.driver.window_handles[0])
-                        self.driver.switch_to.default_content()
-                        self.driver.switch_to.frame(
-                            self.find_element("iframe", "iframe", By.TAG_NAME)
+                finally:
+                    self.driver.switch_to.window(self.driver.window_handles[0])
+                    self.driver.switch_to.default_content()
+                    self.driver.switch_to.frame(
+                        self.find_element("iframe", "iframe", By.TAG_NAME)
                         )
-        # for kw_li in kw_li_url:
-        #     self.driver.execute_script(f"window.open('{kw_li}', '_blank');")
-
-        # self.driver.switch_to.window(self.driver.window_handles[0])
-        # self.driver.close()
-
-        
-        
-        
-        # for win in self.driver.window_handles:
-        #     self.driver.switch_to.window(win)
-        #     self.driver.close() if "object-link" in self.driver.current_url else print(
-        #         self.driver.current_url
-        #     )
-    
-    # def process_window(self, win):
-    #     variabless = {
-    #         "main kw": "useclip005f007a kW",
-    #         "Strom L1..L3 AVG": "useclip005f0073 A",
-    #         "Scheinleistung L1..L3": "useclip005f0081 kVA",
-    #         "Blindleistung L1..L3": "useclip005f0088 kVAR",
-            
-    #         "Leistung": {
-    #             "Leistung L1": "useclip005f005e kW",
-    #             "Leistung L2": "useclip005f0065 kW",
-    #             "Leistung L3": "useclip005f006c kW",
-    #         },
-    #         "CosPhi/Frequenz/Harmonie": {
-    #             "CosPhi L1": "useclip005f001f",
-    #             "CosPhi L2": "useclip005f0026",
-    #             "CosPhi L3": "useclip005f002d",
-    #         },
-    #         "Blindleistung/Energie": {
-    #             "Blindleistung L1": "useclip005f0049 kVAR",
-    #             "Blindleistung L2": "useclip005f0050 kVAR",
-    #             "Blindleistung L3": "useclip005f0057 kVAR",
-    #         },
-    #         "Spannungen": {
-    #             "Spannung L1-L2": "useclip005f0034 V",
-    #             "Spannung L2-L3": "useclip005f003b V",
-    #             "Spannung L3-L1": "useclip005f0042 V",
-    #         },
-    #         "Scheinleistung/Energie": {
-    #             "Scheinleistung L1": "useclip005f000a kVA",
-    #             "Scheinleistung L2": "useclip005f0011 kVA",
-    #             "Scheinleistung L3": "useclip005f0018 kVA",
-    #         },
-    #     }
-    #     self.driver.switch_to.window(win)
-    #     data = {}
-    #     for key, value in variabless.items():
-    #         if type(value) != dict:
-    #             data[key] = self.scrap_data1(value)
-    #         else:
-    #             data[key] = self.scrap_data2(value)
-    #     main_data.append(data)
 
     def return_main_data(self):
         variabless = {
@@ -473,14 +385,14 @@ class Bot:
             },
         }
         
-        # self.driver.switch_to.window(win)
         data = {}
         for key, value in variabless.items():
-            if type(value) != dict :
-                data[key] = self.scrap_data1(value)
-            else :
-                data[key] = self.scrap_data2(value)
-            
+            try:
+                if isinstance(value, dict):
+                    data[key] = self.scrap_data1(value)
+                else :
+                    data[key] = self.scrap_data2(value)
+            except:pass
         return data
 
     async def return_main_data_for_all_windows_parallel_helper(self, win):
@@ -488,21 +400,16 @@ class Bot:
         return self.return_main_data()
 
     async def return_main_data_for_all_windows_parallel(self):
-        all_main_data = []
         with ThreadPoolExecutor() as executor:
             tasks = [self.return_main_data_for_all_windows_parallel_helper(win) for win in self.driver.window_handles[1:]]
             results = await asyncio.gather(*tasks)
-            # for result in results:
-            #     all_main_data.extend(result)
         return results
                 
     def scrap_data1(self,  value : str):
-        kw = ''
         rt_v = ''
-        v1 = value.split(' ')
-        if len(v1) > 1 :
-            kw = v1[1]
-        idd = v1[0]
+        parts = value.split(' ')
+        kw = parts[1] if len(parts) > 1 else ''
+        idd = parts[0]
         ele = self.driver.find_elements(By.ID,idd)
         if ele :
             rt_v = ele[0].text 
