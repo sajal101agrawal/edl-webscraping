@@ -43,7 +43,7 @@ class Bot:
             options.add_argument("--mute-audio")
             options.add_argument("--ignore-gpu-blocklist")
             options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--headless")
+            # options.add_argument("--headless")
             prefs = {
                 "credentials_enable_service": True,
                 "profile.default_content_setting_values.automatic_downloads": 1,
@@ -295,23 +295,41 @@ class Bot:
                 self.driver.back()
                 self.driver.refresh()
 
+        self.track_window_list = []
         for use_link in engines_links:
             self.driver.get(use_link)
             iframe = ""
             iframe = self.find_element("iframe", "iframe", By.TAG_NAME)
             if iframe:
                 try:
+                    main_window = self.driver.window_handles[0]
+                    print(main_window)
                     self.driver.switch_to.frame(iframe)
-                    random_sleep()
                     all_btn_id = ['group_f0000005','group_f0000007', 'group_f0000008','group_f0000009',
-                                   'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d']
+                                   'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d', ]
                     for id in all_btn_id:
-                        self.driver.find_element(By.ID,id).click()
+                        self.click_element(f'{id} id',id, By.ID)
                         random_sleep(1,2)
-                except:
-                        ...
+                    for i in self.driver.window_handles[1:]: self.track_window_list.append(i)
+                    random_sleep()
+                    self.click_element('info', 'group_f000000f', By.ID)
+                    self.random_sleep(7)
+                    self.driver.switch_to.window(self.driver.window_handles[-1])
+                    # self.driver.switch_to.window(self.track_window_list[-1])
+                    self.click_element('info', 'group_f000000f', By.ID)
+                    self.random_sleep(7)
+                    for window in self.driver.window_handles[9:]:
+                        self.driver.switch_to.window(window)
+                        if 'WebGE/ZM111_01.html' in self.driver.current_url :
+                            self.track_window_list.append(window)
+                            self.diff_window = window
+                            break
+
+                except Exception as e:
+                        print(e)
                 finally:
                     self.driver.switch_to.window(self.driver.window_handles[0])
+                    # self.driver.switch_to.window(self.track_window_list[0])
                     self.driver.switch_to.default_content()
                     self.driver.switch_to.frame(
                         self.find_element("iframe", "iframe", By.TAG_NAME)
@@ -352,20 +370,80 @@ class Bot:
         }
         
         data = {}
+        check_bool = False
         for key, value in variabless.items():
             if isinstance(value, dict):
-                data[key] = self.scrap_data2(value)
+                value_resp = self.scrap_data2(value)
+                if value_resp != "":
+                    data[key] = value_resp
+                else:
+                    check_bool = True
+                    break
             else :
-                data[key] = self.scrap_data1(value)
+                value_resp = self.scrap_data1(value)
+                if value_resp != "":
+                    data[key] = value_resp
+                else:
+                    check_bool = True
+                    break
+
+        if check_bool == True:
+            data = {}
+            variabless = {
+                "Gesamtleistung L1..L3": "useclip0043007a kW",
+                "Scheinleistung Strom L1": "useclip00430073 A",
+                "Scheinleistung Strom L2": "useclip004300b1 A",
+                "Scheinleistung Strom L3": "useclip004300aa A",
+                
+                "Leistung": {
+                    "Leistung L1": "useclip0043005e kW",
+                    "Leistung L2": "useclip00430065 kW",
+                    "Leistung L3": "useclip0043006c kW",
+                },
+                "CosPhi/Frequenz/Harmonie": {
+                    "CosPhi L1": "useclip0043001f",
+                    "CosPhi L2": "useclip00430026",
+                    "CosPhi L3": "useclip0043002d",
+                },
+                "Blindleistung/Energie": {
+                    "Blindleistung L1": "useclip00430049 kVAR",
+                    "Blindleistung L2": "useclip00430050 kVAR",
+                    "Blindleistung L3": "useclip00430057 kVAR",
+                },
+                "Spannungen": {
+                    "Spannung L1-L2": "useclip00430034 V",
+                    "Spannung L2-L3": "useclip0043003b V",
+                    "Spannung L3-L1": "useclip00430042 V",
+                },
+                "Scheinleistung/Energie": {
+                    "Scheinleistung L1": "useclip0043000a kVA",
+                    "Scheinleistung L2": "useclip00430011 kVA",
+                    "Scheinleistung L3": "useclip00430018 kVA",
+                },
+            }
+            
+            data = {}
+            for key, value in variabless.items():
+                if isinstance(value, dict):
+                    data[key] = self.scrap_data21(value)
+                else :
+                    data[key] = self.scrap_data1(value)
         return data
 
     async def return_main_data_for_all_windows_parallel_helper(self, win):
         self.driver.switch_to.window(win)
+        if self.driver.current_window_handle == self.diff_window:
+            Energie_Tarif_1 = self.find_element('useclip00760040 id', 'useclip00760040', By.ID)
+            Wirkleistung_Total = self.find_element('useclip00760039 id', 'useclip00760039', By.ID)
+            return {
+                'Energie Tarif 1': f'{Energie_Tarif_1.text.strip()} W',
+                'Wirkleistung Total': f'{Wirkleistung_Total.text.strip()} kWh'
+            }
         return self.return_main_data()
 
     async def return_main_data_for_all_windows_parallel(self):
         with ThreadPoolExecutor() as executor:
-            tasks = [self.return_main_data_for_all_windows_parallel_helper(win) for win in self.driver.window_handles[1:]]
+            tasks = [self.return_main_data_for_all_windows_parallel_helper(win) for win in self.track_window_list]
             results = await asyncio.gather(*tasks)
         return results
                 
@@ -380,12 +458,20 @@ class Bot:
             if kw :
                 rt_v += ' ' + kw
             return rt_v
-
         return ''
         
     def scrap_data2(self, dictt : dict):
         tmp = {}
         for key, value in dictt.items():
-            tmp[key] = self.scrap_data1(value)
+            if self.scrap_data1(value) != "":
+                tmp[key] = self.scrap_data1(value)
+            else:
+                return ''
         
+        return tmp
+
+    def scrap_data21(self, dictt : dict):
+        tmp = {}
+        for key, value in dictt.items():
+            tmp[key] = self.scrap_data1(value)
         return tmp
