@@ -7,7 +7,7 @@ import time
 print(__name__)
 connected = set()
 bot_ = Bot()
-bot_.get_local_driver()
+bot_.get_driver()
 bot_.work()
 
 
