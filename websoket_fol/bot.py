@@ -88,7 +88,7 @@ class Bot:
             options.add_argument("--mute-audio")
             options.add_argument("--ignore-gpu-blocklist")
             options.add_argument("--disable-dev-shm-usage")
-            # options.add_argument("--headless")
+            options.add_argument("--headless")
             prefs = {
                 "credentials_enable_service": True,
                 "profile.default_content_setting_values.automatic_downloads": 1,
@@ -259,9 +259,9 @@ class Bot:
         self.login()
         table = self.find_element("Table", "table", By.TAG_NAME)
         tbody = table.find_elements(By.TAG_NAME, "tbody")
-        if tbody:
-            tbody = tbody[0]
-            numbers_tr_ele = tbody.find_elements(By.TAG_NAME, "tr")
+        if not tbody: return False
+        tbody = tbody[0]
+        numbers_tr_ele = tbody.find_elements(By.TAG_NAME, "tr")
 
         for tr_tag in numbers_tr_ele:
             tr_a_tag = tr_tag.find_elements(
@@ -304,7 +304,7 @@ class Bot:
                     print(main_window)
                     self.driver.switch_to.frame(iframe)
                     all_btn_id = ['group_f0000005','group_f0000007', 'group_f0000008','group_f0000009',
-                                   'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d', ]
+                                'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d', ]
                     previous_len = 1
                     for id in all_btn_id:
                         self.click_element(f'{id} id',id, By.ID)
@@ -342,6 +342,7 @@ class Bot:
                     self.driver.switch_to.frame(
                         self.find_element("iframe", "iframe", By.TAG_NAME)
                         )
+        return True
 
     def return_main_data(self):
         variabless = {
