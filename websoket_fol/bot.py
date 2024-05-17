@@ -105,8 +105,7 @@ class Bot:
             options.add_argument("--enable-javascript")
             options.add_argument("--enable-popup-blocking")
             try:
-                breakpoint()
-                driver = Chrome(options=options, version_main=121)
+                driver = Chrome(options=options, version_main=124)
                 driver.get("https://www.google.com")
                 break
             except Exception as e:
@@ -162,7 +161,6 @@ class Bot:
         ele = self.find_element(element, locator, locator_type, timeout=timeout)
 
         if ele:
-            self.driver.execute_script("arguments[0].scrollIntoViewIfNeeded();", ele)
             self.ensure_click(ele)
             print(f"Clicked the element: {element}")
             return ele
@@ -307,24 +305,34 @@ class Bot:
                     self.driver.switch_to.frame(iframe)
                     all_btn_id = ['group_f0000005','group_f0000007', 'group_f0000008','group_f0000009',
                                    'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d', ]
+                    previous_len = 1
                     for id in all_btn_id:
                         self.click_element(f'{id} id',id, By.ID)
-                        random_sleep(1,2)
+                        random_sleep(5,7)
+                        for i in range(3):
+                            if len(self.driver.window_handles) == previous_len:
+                                self.click_element(f'{id} id',id, By.ID)
+                                random_sleep(5,7)
+                        previous_len = len(self.driver.window_handles) 
                     for i in self.driver.window_handles[1:]: self.track_window_list.append(i)
                     random_sleep()
                     self.click_element('info', 'group_f000000f', By.ID)
                     self.random_sleep(7)
-                    self.driver.switch_to.window(self.driver.window_handles[-1])
-                    # self.driver.switch_to.window(self.track_window_list[-1])
+
+                    for window in self.driver.window_handles:
+                        self.driver.switch_to.window(window)
+                        if 'WebGE/193i_011_Uebersicht_UV.html' in self.driver.current_url :
+                            break
+
                     self.click_element('info', 'group_f000000f', By.ID)
                     self.random_sleep(7)
-                    for window in self.driver.window_handles[9:]:
+                    for window in self.driver.window_handles[8:]:
                         self.driver.switch_to.window(window)
                         if 'WebGE/ZM111_01.html' in self.driver.current_url :
                             self.track_window_list.append(window)
                             self.diff_window = window
                             break
-
+                    print(len(self.driver.window_handles))
                 except Exception as e:
                         print(e)
                 finally:
