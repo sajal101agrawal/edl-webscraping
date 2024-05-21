@@ -6,6 +6,10 @@ import asyncio
 import websockets
 import subprocess
 from bot import Bot
+import logging
+logging.basicConfig(filename='api.log',level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 
 def kill_chrome_drivers():
@@ -14,14 +18,14 @@ def kill_chrome_drivers():
         result = subprocess.run(['pkill', '-f', 'chromedriver'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         if result.returncode == 0:
-            print("All ChromeDriver processes have been terminated.")
+            logging.info("All ChromeDriver processes have been terminated.")
         elif "Operation not permitted" in result.stderr:
-            print("Permission denied. Please run the script with elevated privileges (e.g., using sudo).")
+            logging.info("Permission denied. Please run the script with elevated privileges (e.g., using sudo).")
         else:
-            print(f"No ChromeDriver processes found or an error occurred: {result.stderr.strip()}")
+            logging.info(f"No ChromeDriver processes found or an error occurred: {result.stderr.strip()}")
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.info(f"An error occurred: {e}")
 
 # Initialize bot
 if __name__ == '__main__':
@@ -34,7 +38,7 @@ if __name__ == '__main__':
                 pass
 
             time.sleep(10)
-            print('websocket start')
+            logging.info('websocket start')
 
             async def echo(websocket, path):
                 connected.add(websocket)
@@ -43,13 +47,13 @@ if __name__ == '__main__':
                         main_data = await bot_.return_main_data_for_all_windows_parallel()
                         await websocket.send(json.dumps({"data": main_data}))
                 except websockets.exceptions.ConnectionClosedError as e:
-                    print(f"Connection closed with error: {e}")
+                    logging.info(f"Connection closed with error: {e}")
                 except websockets.exceptions.ConnectionClosedOK:
-                    print("Connection closed normally")
+                    logging.info("Connection closed normally")
                 except asyncio.CancelledError:
-                    print("Connection cancelled")
+                    logging.info("Connection cancelled")
                 except Exception as e:
-                    print(f"Unexpected error: {e}")
+                    logging.info(f"Unexpected error: {e}")
                 finally:
                     connected.remove(websocket)
 
@@ -59,7 +63,7 @@ if __name__ == '__main__':
                         try:
                             await ws.ping()
                         except Exception as e:
-                            print(f"Ping error: {e}")
+                            logging.info(f"Ping error: {e}")
                     await asyncio.sleep(1)  # Ping every 10 seconds (adjust as needed)
 
             start_server = websockets.serve(echo, "0.0.0.0", 8765)
