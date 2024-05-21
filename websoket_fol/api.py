@@ -1,7 +1,5 @@
-import os
 import time
 import json
-import signal
 import asyncio
 import websockets
 import subprocess
@@ -23,7 +21,6 @@ def kill_chrome_drivers():
             logging.info("Permission denied. Please run the script with elevated privileges (e.g., using sudo).")
         else:
             logging.info(f"No ChromeDriver processes found or an error occurred: {result.stderr.strip()}")
-
     except Exception as e:
         logging.info(f"An error occurred: {e}")
 
@@ -72,4 +69,5 @@ if __name__ == '__main__':
             loop.create_task(ping())
             loop.run_forever()
         except Exception as e :
+            logging.info(f"Main error: {e}")
             kill_chrome_drivers()
