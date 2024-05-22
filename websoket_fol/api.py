@@ -46,8 +46,8 @@ if __name__ == '__main__':
                 connected = set()
                 bot_ = Bot()
                 bot_.get_driver()
-                while not bot_.work(): 
-                    pass
+                bot_.work()
+                    
 
                 time.sleep(10)
                 logging.info('websocket start')
