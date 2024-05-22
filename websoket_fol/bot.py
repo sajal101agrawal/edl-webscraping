@@ -105,7 +105,7 @@ class Bot:
             options.add_argument("--enable-javascript")
             options.add_argument("--enable-popup-blocking")
             try:
-                driver = Chrome(options=options, version_main=124)
+                driver = Chrome(options=options, version_main=125)
                 driver.get("https://www.google.com")
                 break
             except Exception as e:
