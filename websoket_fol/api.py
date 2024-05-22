@@ -8,7 +8,17 @@ import logging
 logging.basicConfig(filename='api.log',level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
+import psutil
 
+def kill_port(port):
+    for proc in psutil.process_iter(['pid', 'name', 'connections']):
+        for conn in proc.info['connections']:
+            if conn.laddr.port == port:
+                print(f"Killing process {proc.pid} ({proc.name()}) using port {port}...")
+                proc.kill()
+                print("Process killed.")
+                return
+    print(f"No process found using port {port}.")
 
 def kill_chrome_drivers():
     try:
@@ -71,3 +81,4 @@ if __name__ == '__main__':
     except Exception as e :
         logging.info(f"Main error: {e}")
         kill_chrome_drivers()
+        kill_port(8765)
