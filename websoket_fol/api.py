@@ -39,50 +39,50 @@ def kill_chrome_drivers():
 
 # Initialize bot
 if __name__ == '__main__':
-    kill_port(8765)
+    while True:
+        kill_port(8765)
+        try:
+            while True:
+                connected = set()
+                bot_ = Bot()
+                bot_.get_driver()
+                while not bot_.work(): 
+                    pass
 
-    try:
-        while True:
-            connected = set()
-            bot_ = Bot()
-            bot_.get_driver()
-            while not bot_.work(): 
-                pass
+                time.sleep(10)
+                logging.info('websocket start')
 
-            time.sleep(10)
-            logging.info('websocket start')
+                async def echo(websocket, path):
+                    connected.add(websocket)
+                    try:
+                        while True:
+                            main_data = await bot_.return_main_data_for_all_windows_parallel()
+                            await websocket.send(json.dumps({"data": main_data}))
+                    except websockets.exceptions.ConnectionClosedError as e:
+                        logging.info(f"Connection closed with error: {e}")
+                    except websockets.exceptions.ConnectionClosedOK:
+                        logging.info("Connection closed normally")
+                    except asyncio.CancelledError:
+                        logging.info("Connection cancelled")
+                    except Exception as e:
+                        logging.info(f"Unexpected error: {e}")
+                    finally:
+                        connected.remove(websocket)
 
-            async def echo(websocket, path):
-                connected.add(websocket)
-                try:
+                async def ping():
                     while True:
-                        main_data = await bot_.return_main_data_for_all_windows_parallel()
-                        await websocket.send(json.dumps({"data": main_data}))
-                except websockets.exceptions.ConnectionClosedError as e:
-                    logging.info(f"Connection closed with error: {e}")
-                except websockets.exceptions.ConnectionClosedOK:
-                    logging.info("Connection closed normally")
-                except asyncio.CancelledError:
-                    logging.info("Connection cancelled")
-                except Exception as e:
-                    logging.info(f"Unexpected error: {e}")
-                finally:
-                    connected.remove(websocket)
+                        for ws in connected:
+                            try:
+                                await ws.ping()
+                            except Exception as e:
+                                logging.info(f"Ping error: {e}")
+                        await asyncio.sleep(1)  # Ping every 10 seconds (adjust as needed)
 
-            async def ping():
-                while True:
-                    for ws in connected:
-                        try:
-                            await ws.ping()
-                        except Exception as e:
-                            logging.info(f"Ping error: {e}")
-                    await asyncio.sleep(1)  # Ping every 10 seconds (adjust as needed)
-
-            start_server = websockets.serve(echo, "0.0.0.0", 8765)
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(start_server)
-            loop.create_task(ping())
-            loop.run_forever()
-    except Exception as e :
-        logging.info(f"Main error: {e}")
-        kill_chrome_drivers()
+                start_server = websockets.serve(echo, "0.0.0.0", 8765)
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(start_server)
+                loop.create_task(ping())
+                loop.run_forever()
+        except Exception as e :
+            logging.info(f"Main error: {e}")
+            kill_chrome_drivers()
