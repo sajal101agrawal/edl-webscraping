@@ -26,8 +26,8 @@ def kill_chrome_drivers():
 
 # Initialize bot
 if __name__ == '__main__':
-    while True:
-        try:
+    try:
+        while True:
             connected = set()
             bot_ = Bot()
             bot_.get_driver()
@@ -68,6 +68,6 @@ if __name__ == '__main__':
             loop.run_until_complete(start_server)
             loop.create_task(ping())
             loop.run_forever()
-        except Exception as e :
-            logging.info(f"Main error: {e}")
-            kill_chrome_drivers()
+    except Exception as e :
+        logging.info(f"Main error: {e}")
+        kill_chrome_drivers()
