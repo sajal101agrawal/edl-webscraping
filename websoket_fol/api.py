@@ -41,8 +41,8 @@ def kill_chrome_drivers():
 # Initialize bot
 if __name__ == '__main__':
     while True:
-        kill_port(8765)
         try:
+            kill_port(8765)
             while True:
                 connected = set()
                 bot_ = Bot()
