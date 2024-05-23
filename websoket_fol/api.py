@@ -18,14 +18,14 @@ def kill_port(port):
             if connections:
                 for conn in connections:
                     if getattr(conn.laddr, 'port', None) == port:
-                        print(f"Killing process {proc.pid} ({proc.name()}) using port {port}...")
+                        logging.info(f"Killing process {proc.pid} ({proc.name()}) using port {port}...")
                         proc.kill()
-                        print("Process killed.")
+                        logging.info("Process killed.")
                         return True
-        print(f"No process found using port {port}.")
+        logging.info(f"No process found using port {port}.")
         return False
     except Exception as e:
-        print(f'When kill port script found this error: {e}')
+        logging.info(f'When kill port script found this error: {e}')
 
 def kill_chrome_drivers():
     try:
@@ -38,6 +38,13 @@ def kill_chrome_drivers():
             logging.info("Permission denied. Please run the script with elevated privileges (e.g., using sudo).")
         else:
             logging.info(f"No ChromeDriver processes found or an error occurred: {result.stderr.strip()}")
+        result = subprocess.run(['pkill', 'chrome'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            logging.info("All Chrome processes have been terminated.")
+        elif "No matching processes" in result.stderr:
+            logging.info("No Chrome processes found or an error occurred.")
+        else:
+            logging.info(f"Unknown error occurred: {result.stderr.strip()}")
     except Exception as e:
         logging.info(f"An error occurred: {e}")
 
