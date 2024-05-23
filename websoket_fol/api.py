@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
                 async def ping():
                     while True:
-                        for ws in connected:
+                        for ws in set(connected):  # Create a shallow copy of the connected set
                             try:
                                 await ws.ping()
                             except Exception as e:
