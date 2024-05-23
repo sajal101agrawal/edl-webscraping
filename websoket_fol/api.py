@@ -14,15 +14,18 @@ import psutil
 def kill_port(port):
     try:
         for proc in psutil.process_iter(['pid', 'name', 'connections']):
-            for conn in proc.info['connections']:
-                if conn.laddr.port == port:
-                    print(f"Killing process {proc.pid} ({proc.name()}) using port {port}...")
-                    proc.kill()
-                    print("Process killed.")
-                    return
+            connections = proc.info.get('connections')
+            if connections:
+                for conn in connections:
+                    if getattr(conn.laddr, 'port', None) == port:
+                        print(f"Killing process {proc.pid} ({proc.name()}) using port {port}...")
+                        proc.kill()
+                        print("Process killed.")
+                        return True
         print(f"No process found using port {port}.")
+        return False
     except Exception as e:
-        logging.info(f'When kill port script found this error: {e}')
+        print(f'When kill port script found this error: {e}')
 
 def kill_chrome_drivers():
     try:
