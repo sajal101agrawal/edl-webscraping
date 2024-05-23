@@ -5,6 +5,7 @@ import websockets
 import subprocess
 from bot import Bot
 import logging
+
 logging.basicConfig(filename='api.log',level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -20,8 +21,8 @@ def kill_port(port):
                     print("Process killed.")
                     return
         print(f"No process found using port {port}.")
-    except:
-        pass
+    except Exception as e:
+        logging.info(f'When kill port script found this error: {e}')
 
 def kill_chrome_drivers():
     try:

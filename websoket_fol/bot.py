@@ -10,6 +10,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from concurrent.futures import ThreadPoolExecutor
+from selenium.webdriver.common.action_chains import ActionChains
+
 
 import random, time
 
@@ -199,8 +201,13 @@ class Bot:
                 EC.element_to_be_clickable(element)
             )
             element.click()
-        except:
-            self.driver.execute_script("arguments[0].click();", element)
+        except :
+            try:
+                self.driver.execute_script("arguments[0].click();", element)
+            except:
+                actions = ActionChains(self.driver)
+                actions.move_to_element(element).click().perform()
+
 
     def new_tab(self):
         self.driver.find_element(By.XPATH, "/html/body").send_keys(Keys.CONTROL + "t")
