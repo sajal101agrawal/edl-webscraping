@@ -3,7 +3,7 @@ import json
 import asyncio
 import websockets
 import subprocess
-from websoket_fol.bot import Bot
+from bot import Bot
 import logging
 
 logging.basicConfig(filename='api.log',level=logging.INFO,
