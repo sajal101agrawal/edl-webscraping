@@ -3,55 +3,24 @@ import json
 import asyncio
 import websockets
 import subprocess
-from bot import Bot
+from websoket_fol.bot import Bot
 import logging
-import psutil
 
-logging.basicConfig(filename='api.log', level=logging.INFO,
+logging.basicConfig(filename='api.log',level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-async def echo(websocket, path):
-    try:
-        bot = Bot()
-        bot.get_driver()
-        while True:
-            main_data = await bot.return_main_data_for_all_windows_parallel()
-            await websocket.send(json.dumps({"data": main_data}))
-    except websockets.exceptions.ConnectionClosedError as e:
-        logging.info(f"Connection closed with error: {e}")
-    except asyncio.CancelledError:
-        logging.info("Connection cancelled")
-    except Exception as e:
-        logging.exception(f"Unexpected error: {e}")
-
-async def ping(websockets):
-    try:
-        while True:
-            for ws in websockets:
-                try:
-                    await ws.ping()
-                except Exception as e:
-                    logging.info(f"Ping error: {e}")
-            await asyncio.sleep(10)  # Ping every 10 seconds (adjust as needed)
-    except asyncio.CancelledError:
-        logging.info("Ping cancelled")
-    except Exception as e:
-        logging.exception(f"Ping loop error: {e}")
-
-async def serve():
-    async with websockets.serve(echo, "0.0.0.0", 8765):
-        await asyncio.Future()  # Serve forever
+import psutil
 
 def kill_port(port):
     try:
         for proc in psutil.process_iter(['pid', 'name', 'connections']):
             for conn in proc.info['connections']:
                 if conn.laddr.port == port:
-                    logging.info(f"Killing process {proc.pid} ({proc.name()}) using port {port}...")
+                    print(f"Killing process {proc.pid} ({proc.name()}) using port {port}...")
                     proc.kill()
-                    logging.info("Process killed.")
+                    print("Process killed.")
                     return
-        logging.info(f"No process found using port {port}.")
+        print(f"No process found using port {port}.")
     except Exception as e:
         logging.info(f'When kill port script found this error: {e}')
 
@@ -69,15 +38,52 @@ def kill_chrome_drivers():
     except Exception as e:
         logging.info(f"An error occurred: {e}")
 
+# Initialize bot
 if __name__ == '__main__':
     while True:
         kill_port(8765)
         try:
-            loop = asyncio.get_event_loop()
-            websocket_task = loop.create_task(serve())
-            ping_task = loop.create_task(ping(set()))
+            while True:
+                connected = set()
+                bot_ = Bot()
+                bot_.get_driver()
+                bot_.work()
+                    
 
-            loop.run_until_complete(asyncio.gather(websocket_task, ping_task))
-        except Exception as e:
-            logging.exception(f"Main error: {e}")
+                time.sleep(10)
+                logging.info('websocket start')
+
+                async def echo(websocket, path):
+                    connected.add(websocket)
+                    try:
+                        while True:
+                            main_data = await bot_.return_main_data_for_all_windows_parallel()
+                            await websocket.send(json.dumps({"data": main_data}))
+                    except websockets.exceptions.ConnectionClosedError as e:
+                        logging.info(f"Connection closed with error: {e}")
+                    except websockets.exceptions.ConnectionClosedOK:
+                        logging.info("Connection closed normally")
+                    except asyncio.CancelledError:
+                        logging.info("Connection cancelled")
+                    except Exception as e:
+                        logging.info(f"Unexpected error: {e}")
+                    finally:
+                        connected.remove(websocket)
+
+                async def ping():
+                    while True:
+                        for ws in connected:
+                            try:
+                                await ws.ping()
+                            except Exception as e:
+                                logging.info(f"Ping error: {e}")
+                        await asyncio.sleep(1)  # Ping every 10 seconds (adjust as needed)
+
+                start_server = websockets.serve(echo, "0.0.0.0", 8765)
+                loop = asyncio.get_event_loop()
+                loop.run_until_complete(start_server)
+                loop.create_task(ping())
+                loop.run_forever()
+        except Exception as e :
+            logging.info(f"Main error: {e}")
             kill_chrome_drivers()
