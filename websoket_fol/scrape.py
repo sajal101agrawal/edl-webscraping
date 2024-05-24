@@ -1,5 +1,6 @@
 import subprocess
 import asyncio
+import logging
 from bot import Bot
 
 def kill_chrome_drivers():
@@ -25,18 +26,18 @@ def kill_chrome_drivers():
         print(f"An error occurred: {e}")
 
 async def scrape():
-    while True:
+    # while True:
         try:
             bot_ = Bot()
-            bot_.get_driver()  # Ensure get_driver is async if it needs to be
-            bot_.work()        # Ensure work is async if it needs to be
-            await bot_.write_data_in_json()
+            bot_.get_driver()  # Assuming get_driver is synchronous
+            bot_.work()        # Assuming work is synchronous
+            await bot_.write_data_in_json()  # Assuming write_data_in_json is asynchronous
         except Exception as e:
             print(f"An error occurred during scraping: {e}")
         finally:
             kill_chrome_drivers()
-        await asyncio.sleep(10)  # Adjust the sleep interval as needed
 
 # Run the scrape function using asyncio
 if __name__ == "__main__":
-    asyncio.run(scrape())
+    while True:
+        asyncio.run(scrape())

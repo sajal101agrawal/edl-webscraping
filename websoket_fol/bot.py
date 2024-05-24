@@ -12,6 +12,8 @@ from selenium.webdriver.chrome.service import Service
 from concurrent.futures import ThreadPoolExecutor
 from selenium.webdriver.common.action_chains import ActionChains
 import logging
+from filelock import FileLock
+
 
 logging.basicConfig(filename='api.log',level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -464,11 +466,25 @@ class Bot:
             results = await asyncio.gather(*tasks)
         return results
     
+    def write_json_file(self, filepath, data):
+        lock = FileLock(filepath + ".lock")
+        try:
+            with lock.acquire(timeout=10):  # Try to acquire the lock with a short timeout
+                with open(filepath, 'w') as file:
+                    json.dump(data, file, indent=4)
+                return
+        except TimeoutError:
+            logging.info("Waiting for lock to be released...")
+            time.sleep(1)  # Wait before trying again
+
+    
     async def write_data_in_json(self):
         while True:
+            filepath = 'data.json'
             main_data = await self.return_main_data_for_all_windows_parallel()
-            with open('data.json', 'w') as json_file:
-                json.dump(main_data, json_file, indent=4)
+            print(main_data)
+            if main_data:
+                self.write_json_file(filepath, main_data)
                 
     def scrap_data1(self,  value : str):
         rt_v = ''
