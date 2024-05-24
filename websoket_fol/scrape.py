@@ -28,8 +28,8 @@ async def scrape():
     while True:
         try:
             bot_ = Bot()
-            await bot_.get_driver()  # Ensure get_driver is async if it needs to be
-            await bot_.work()        # Ensure work is async if it needs to be
+            bot_.get_driver()  # Ensure get_driver is async if it needs to be
+            bot_.work()        # Ensure work is async if it needs to be
             await bot_.write_data_in_json()
         except Exception as e:
             print(f"An error occurred during scraping: {e}")
