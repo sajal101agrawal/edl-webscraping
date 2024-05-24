@@ -11,14 +11,17 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from concurrent.futures import ThreadPoolExecutor
 from selenium.webdriver.common.action_chains import ActionChains
+import logging
 
+logging.basicConfig(filename='api.log',level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 import random, time
 
 
 def random_sleep(a=5, b=9):
     acc = random.randint(a, b)
-    print("random sleep :", acc)
+    logging.info(f"random sleep : {acc}")
     time.sleep(acc)
 
 
@@ -71,7 +74,7 @@ class Bot:
                 # for cookie in cookies: driver.add_cookie(cookie)
                 break
             except Exception as e:
-                print(e)
+                logging.info(e)
 
         self.driver = driver
         return self.driver
@@ -111,7 +114,7 @@ class Bot:
                 driver.get("https://www.google.com")
                 break
             except Exception as e:
-                print(e)
+                logging.info(e)
 
         self.driver = driver
         return self.driver
@@ -140,23 +143,23 @@ class Bot:
                     )
                 )
             else:
-                print(f"Timeout is less or equal zero: {timeout}")
+                logging.info(f"Timeout is less or equal zero: {timeout}")
                 ele = (
                     self.driver.find_element(by=locator_type, value=locator)
                     if not bulk
                     else self.driver.find_elements(by=locator_type, value=locator)
                 )
             if page:
-                print(f'Found the element "{element}" in the page "{page}"')
+                logging.info(f'Found the element "{element}" in the page "{page}"')
             else:
-                print(f"Found the element: {element}")
+                logging.info(f"Found the element: {element}")
             return ele
         except Exception as e:
             if page:
-                print(f'Cannot find the element "{element}"' f' in the page "{page}"')
+                logging.info(f'Cannot find the element "{element}"' f' in the page "{page}"')
             else:
-                print(f"Cannot find the element: {element}")
-                print(e)
+                logging.info(f"Cannot find the element: {element}")
+                logging.info(e)
 
     def click_element(self, element, locator, locator_type=By.XPATH, timeout=10):
         """Find an element, then click and return it, or return None"""
@@ -164,7 +167,7 @@ class Bot:
 
         if ele:
             self.ensure_click(ele)
-            print(f"Clicked the element: {element}")
+            logging.info(f"Clicked the element: {element}")
             return ele
 
     def input_text(
@@ -187,7 +190,7 @@ class Bot:
                 try:
                     ele.clear()
                     ele.send_keys(text)
-                    print(f'Inputed "{text}" for the element: {element}')
+                    logging.info(f'Inputed "{text}" for the element: {element}')
                     return ele
                 except:
                     ...
@@ -216,22 +219,22 @@ class Bot:
         import time, os
 
         random_time = random.randint(a, b)
-        print("time sleep randomly :", random_time)
+        logging.info(f"time sleep randomly : {random_time}")
         time.sleep(random_time)
 
     def getvalue_byscript(self, script="", reason=""):
         """made for return value from ele or return ele"""
         if reason:
-            print(f"Script execute for : {reason}")
+            logging.info(f"Script execute for : {reason}")
         else:
-            print(f"execute_script : {script}")
+            logging.info(f"execute_script : {script}")
         value = self.driver.execute_script(f"return {script}")
         return value
 
     def CloseDriver(self):
         try:
             self.driver.quit()
-            print("Driver is closed !")
+            logging.info("Driver is closed !")
         except Exception as e:
             ...
 
@@ -306,50 +309,48 @@ class Bot:
             iframe = ""
             iframe = self.find_element("iframe", "iframe", By.TAG_NAME)
             if iframe:
-                try:
-                    main_window = self.driver.window_handles[0]
-                    print(main_window)
-                    self.driver.switch_to.frame(iframe)
-                    all_btn_id = ['group_f0000005','group_f0000007', 'group_f0000008','group_f0000009',
-                                'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d', ]
-                    previous_len = 1
-                    for id in all_btn_id:
-                        self.click_element(f'{id} id',id, By.ID)
-                        random_sleep(5,7)
-                        for i in range(3):
-                            if len(self.driver.window_handles) == previous_len:
-                                self.click_element(f'{id} id',id, By.ID)
-                                random_sleep(5,7)
-                        previous_len = len(self.driver.window_handles) 
-                    for i in self.driver.window_handles[1:]: self.track_window_list.append(i)
-                    random_sleep()
-                    self.click_element('info', 'group_f000000f', By.ID)
-                    self.random_sleep(7)
+                main_window = self.driver.window_handles[0]
+                logging.info(main_window)
+                self.driver.switch_to.frame(iframe)
+                all_btn_id = ['group_f0000005','group_f0000007', 'group_f0000008','group_f0000009',
+                            'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d', ]
+                previous_len = 1
+                for id in all_btn_id:
+                    self.click_element(f'{id} id',id, By.ID)
+                    random_sleep(5,7)
+                    for i in range(3):
+                        if len(self.driver.window_handles) == previous_len:
+                            self.click_element(f'{id} id',id, By.ID)
+                            random_sleep(5,7)
+                        if i == 2 and len(self.driver.window_handles) == previous_len:
+                            raise RuntimeError("The number of driver's windows did not increase as expected.")
+                    previous_len = len(self.driver.window_handles) 
+                for i in self.driver.window_handles[1:]: self.track_window_list.append(i)
+                random_sleep()
+                self.click_element('info', 'group_f000000f', By.ID)
+                self.random_sleep(7)
 
-                    for window in self.driver.window_handles:
-                        self.driver.switch_to.window(window)
-                        if 'WebGE/193i_011_Uebersicht_UV.html' in self.driver.current_url :
-                            break
+                for window in self.driver.window_handles:
+                    self.driver.switch_to.window(window)
+                    if 'WebGE/193i_011_Uebersicht_UV.html' in self.driver.current_url :
+                        break
 
-                    self.click_element('info', 'group_f000000f', By.ID)
-                    self.random_sleep(7)
-                    for window in self.driver.window_handles[8:]:
-                        self.driver.switch_to.window(window)
-                        if 'WebGE/ZM111_01.html' in self.driver.current_url :
-                            self.track_window_list.append(window)
-                            self.diff_window = window
-                            break
-                    print(len(self.driver.window_handles))
-                except Exception as e:
-                        print(e)
-                finally:
-                    self.driver.switch_to.window(self.driver.window_handles[0])
-                    # self.driver.switch_to.window(self.track_window_list[0])
-                    self.driver.switch_to.default_content()
-                    self.driver.switch_to.frame(
-                        self.find_element("iframe", "iframe", By.TAG_NAME)
-                        )
-        return True
+                self.click_element('info', 'group_f000000f', By.ID)
+                self.random_sleep(7)
+                for window in self.driver.window_handles[8:]:
+                    self.driver.switch_to.window(window)
+                    if 'WebGE/ZM111_01.html' in self.driver.current_url :
+                        self.track_window_list.append(window)
+                        self.diff_window = window
+                        break
+                logging.info(len(self.driver.window_handles))
+
+                self.driver.switch_to.window(self.driver.window_handles[0])
+                # self.driver.switch_to.window(self.track_window_list[0])
+                self.driver.switch_to.default_content()
+                self.driver.switch_to.frame(
+                    self.find_element("iframe", "iframe", By.TAG_NAME)
+                    )
 
     def return_main_data(self):
         variabless = {
