@@ -136,3 +136,4 @@ dmypy.json
 
 server.log
 api.log
+data.json
