@@ -216,5 +216,5 @@ if __name__ == '__main__':
     start_server = websockets.serve(echo, "0.0.0.0", 8765)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(start_server)
-    loop.create_task(ping())
+    # loop.create_task(ping())
     loop.run_forever()
