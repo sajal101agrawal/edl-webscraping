@@ -463,6 +463,12 @@ class Bot:
             tasks = [self.return_main_data_for_all_windows_parallel_helper(win) for win in self.track_window_list]
             results = await asyncio.gather(*tasks)
         return results
+    
+    async def write_data_in_json(self):
+        while True:
+            main_data = await self.return_main_data_for_all_windows_parallel()
+            with open('data.json', 'w') as json_file:
+                json.dump(main_data, json_file, indent=4)
                 
     def scrap_data1(self,  value : str):
         rt_v = ''

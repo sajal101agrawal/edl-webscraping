@@ -47,49 +47,55 @@ def kill_chrome_drivers():
 
 # Initialize bot
 if __name__ == '__main__':
-    while True:
-        try:
-            kill_port(8765)
-            connected = set()
-            bot_ = Bot()
-            bot_.get_driver()
-            bot_.work()
-                
+        connected = set()
+        time.sleep(10)
+        logging.info('websocket start')
 
-            time.sleep(10)
-            logging.info('websocket start')
-
-            async def echo(websocket, path):
-                connected.add(websocket)
-                try:
-                    while True:
-                        main_data = await bot_.return_main_data_for_all_windows_parallel()
-                        await websocket.send(json.dumps({"data": main_data}))
-                except websockets.exceptions.ConnectionClosedError as e:
-                    logging.info(f"Connection closed with error: {e}")
-                except websockets.exceptions.ConnectionClosedOK:
-                    logging.info("Connection closed normally")
-                except asyncio.CancelledError:
-                    logging.info("Connection cancelled")
-                except Exception as e:
-                    logging.info(f"Unexpected error: {e}")
-                finally:
-                    connected.remove(websocket)
-
-            async def ping():
+        async def echo(websocket, path):
+            def get_file_modification_time(filepath):
+                return os.path.getmtime(filepath)
+            filepath  =  'data.json'
+            last_mod_time = get_file_modification_time(filepath)
+            connected.add(websocket)
+            try:
                 while True:
-                    for ws in set(connected):  # Create a shallow copy of the connected set
-                        try:
-                            await ws.ping()
-                        except Exception as e:
-                            logging.info(f"Ping error: {e}")
-                    await asyncio.sleep(1)  # Ping every 10 seconds (adjust as needed)
+                    try:
+                        current_mod_time = get_file_modification_time(filepath)
+                        if current_mod_time != last_mod_time:
+                            with open(filepath, 'r') as file:
+                                data = json.load(file)
+                            print("File has been updated.")
+                            last_mod_time = current_mod_time
+                            await websocket.send(json.dumps({"data": data}, indent=4))  # Return the updated data in JSON format                        
+                        time.sleep(0.3)
+                    except FileNotFoundError:
+                        print(f"File {filepath} not found.")
+                        break
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
+                        break
+            except websockets.exceptions.ConnectionClosedError as e:
+                logging.info(f"Connection closed with error: {e}")
+            except websockets.exceptions.ConnectionClosedOK:
+                logging.info("Connection closed normally")
+            except asyncio.CancelledError:
+                logging.info("Connection cancelled")
+            except Exception as e:
+                logging.info(f"Unexpected error: {e}")
+            finally:
+                connected.remove(websocket)
 
-            start_server = websockets.serve(echo, "0.0.0.0", 8765)
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(start_server)
-            loop.create_task(ping())
-            loop.run_forever()
-        except Exception as e :
-            logging.info(f"Main error: {e}")
-            kill_chrome_drivers()
+        async def ping():
+            while True:
+                for ws in set(connected):  # Create a shallow copy of the connected set
+                    try:
+                        await ws.ping()
+                    except Exception as e:
+                        logging.info(f"Ping error: {e}")
+                await asyncio.sleep(1)  # Ping every 10 seconds (adjust as needed)
+
+        start_server = websockets.serve(echo, "0.0.0.0", 8765)
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(start_server)
+        loop.create_task(ping())
+        loop.run_forever()
