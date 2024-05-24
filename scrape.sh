@@ -7,5 +7,4 @@ source /home/DickiData/edl-webscraping/env/bin/activate
 cd /home/DickiData/edl-webscraping/websoket_fol
 
 # Start the Gunicorn server with Uvicorn worker
-pwd
-python scrape.py
+python /home/DickiData/edl-webscraping/websoket_fol/scrape.py
