@@ -95,7 +95,7 @@ class Bot:
             options.add_argument("--mute-audio")
             options.add_argument("--ignore-gpu-blocklist")
             options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--headless")
+            # options.add_argument("--headless")
             prefs = {
                 "credentials_enable_service": True,
                 "profile.default_content_setting_values.automatic_downloads": 1,
@@ -111,14 +111,58 @@ class Bot:
             options.add_argument("--ignore-certificate-errors")
             options.add_argument("--enable-javascript")
             options.add_argument("--enable-popup-blocking")
+
+            options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
             try:
                 driver = Chrome(options=options, version_main=125)
                 driver.get("https://www.google.com")
-                break
+                self.driver = driver
+                # self.driver.execute_cdp_cmd('Network.enable', {})
+
+                # # Intercepting responses
+                # self.driver.execute_cdp_cmd(
+                #     'Network.setRequestInterception',
+                #     {'patterns': [{'urlPattern': '*'}]}
+                # )
+
+                # self.driver.responses = []
+
+                # def response_listener(request_id, url):
+                #     def handle_response(response):
+                #         if 'response' in response and 'requestId' in response and response['requestId'] == request_id:
+                #             if '/data/update?' in url:
+                #                 self.driver.responses.append({
+                #                     'url': url,
+                #                     'body': self.driver.execute_cdp_cmd('Network.getResponseBody', {'requestId': request_id})['body']
+                #                 })
+
+                #     return handle_response
+
+                # def request_will_be_sent(params):
+                #     url = params['request']['url']
+                #     if '/data/update?' in url:
+                #         self.driver.request_ids[params['requestId']] = url
+
+                # self.driver.request_ids = {}
+
+                # def response_received(params):
+                #     request_id = params['requestId']
+                #     if request_id in self.driver.request_ids:
+                #         url = self.driver.request_ids.pop(request_id)
+                #         self.driver.execute_cdp_cmd(
+                #             'Network.getResponseBody',
+                #             {'requestId': request_id},
+                #             response_listener(request_id, url)
+                #         )
+
+                # Adding listeners
+                # self.driver.add_listener('Network.requestWillBeSent', request_will_be_sent)
+                # self.driver.add_listener('Network.responseReceived', response_received)
+                return self.driver
             except Exception as e:
+                print(e)
                 logging.info(e)
 
-        self.driver = driver
         return self.driver
 
     def find_element(
@@ -314,8 +358,9 @@ class Bot:
                 main_window = self.driver.window_handles[0]
                 logging.info(main_window)
                 self.driver.switch_to.frame(iframe)
-                all_btn_id = ['group_f0000005','group_f0000007', 'group_f0000008','group_f0000009',
-                            'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d', ]
+                all_btn_id = ['group_f0000006' ]
+                # all_btn_id = ['group_f0000006','group_f0000005','group_f0000007', 'group_f0000008','group_f0000009',
+                #             'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d', ]
                 previous_len = 1
                 for id in all_btn_id:
                     self.click_element(f'{id} id',id, By.ID)
@@ -328,31 +373,36 @@ class Bot:
                             raise RuntimeError("The number of driver's windows did not increase as expected.")
                     previous_len = len(self.driver.window_handles) 
                 for i in self.driver.window_handles[1:]: self.track_window_list.append(i)
-                random_sleep()
-                self.click_element('info', 'group_f000000f', By.ID)
-                self.random_sleep(7)
+                # random_sleep()
+                # self.click_element('info', 'group_f000000f', By.ID)
+                # self.random_sleep(7)
 
-                for window in self.driver.window_handles:
-                    self.driver.switch_to.window(window)
-                    if 'WebGE/193i_011_Uebersicht_UV.html' in self.driver.current_url :
-                        break
+                # for window in self.driver.window_handles:
+                #     self.driver.switch_to.window(window)
+                #     if 'WebGE/193i_011_Uebersicht_UV.html' in self.driver.current_url :
+                #         break
 
-                self.click_element('info', 'group_f000000f', By.ID)
-                self.random_sleep(7)
-                for window in self.driver.window_handles[8:]:
-                    self.driver.switch_to.window(window)
-                    if 'WebGE/ZM111_01.html' in self.driver.current_url :
-                        self.track_window_list.append(window)
-                        self.diff_window = window
-                        break
-                logging.info(len(self.driver.window_handles))
+                # self.click_element('info', 'group_f000000f', By.ID)
+                # self.random_sleep(7)
+                # for window in self.driver.window_handles[8:]:
+                #     self.driver.switch_to.window(window)
+                #     if 'WebGE/ZM111_01.html' in self.driver.current_url :
+                #         self.track_window_list.append(window)
+                #         self.diff_window = window
+                #         break
+                # logging.info(len(self.driver.window_handles))
+                # # breakpoint()
+                # logs = self.driver.get_log("performance") 
+                # for i in self.process_browser_logs_for_network_events(logs):print(i)
 
-                self.driver.switch_to.window(self.driver.window_handles[0])
-                # self.driver.switch_to.window(self.track_window_list[0])
-                self.driver.switch_to.default_content()
-                self.driver.switch_to.frame(
-                    self.find_element("iframe", "iframe", By.TAG_NAME)
-                    )
+                # # for entry in self.process_browser_logs_for_network_events(log_entries):respon.append(entry)
+                # self.driver.switch_to.window(self.driver.window_handles[0])
+                # # self.driver.switch_to.window(self.track_window_list[0])
+                # self.driver.switch_to.default_content()
+                # self.driver.switch_to.frame(
+                #     self.find_element("iframe", "iframe", By.TAG_NAME)
+                #     )
+
 
     def return_main_data(self):
         variabless = {
@@ -361,31 +411,31 @@ class Bot:
             "Scheinleistung L1..L3": "useclip005f0081 kVA",
             "Blindleistung L1..L3": "useclip005f0088 kVAR",
             
-            "Leistung": {
-                "Leistung L1": "useclip005f005e kW",
-                "Leistung L2": "useclip005f0065 kW",
-                "Leistung L3": "useclip005f006c kW",
-            },
-            "CosPhi/Frequenz/Harmonie": {
-                "CosPhi L1": "useclip005f001f",
-                "CosPhi L2": "useclip005f0026",
-                "CosPhi L3": "useclip005f002d",
-            },
-            "Blindleistung/Energie": {
-                "Blindleistung L1": "useclip005f0049 kVAR",
-                "Blindleistung L2": "useclip005f0050 kVAR",
-                "Blindleistung L3": "useclip005f0057 kVAR",
-            },
-            "Spannungen": {
-                "Spannung L1-L2": "useclip005f0034 V",
-                "Spannung L2-L3": "useclip005f003b V",
-                "Spannung L3-L1": "useclip005f0042 V",
-            },
-            "Scheinleistung/Energie": {
-                "Scheinleistung L1": "useclip005f000a kVA",
-                "Scheinleistung L2": "useclip005f0011 kVA",
-                "Scheinleistung L3": "useclip005f0018 kVA",
-            },
+            # "Leistung": {
+            #     "Leistung L1": "useclip005f005e kW",
+            #     "Leistung L2": "useclip005f0065 kW",
+            #     "Leistung L3": "useclip005f006c kW",
+            # },
+            # "CosPhi/Frequenz/Harmonie": {
+            #     "CosPhi L1": "useclip005f001f",
+            #     "CosPhi L2": "useclip005f0026",
+            #     "CosPhi L3": "useclip005f002d",
+            # },
+            # "Blindleistung/Energie": {
+            #     "Blindleistung L1": "useclip005f0049 kVAR",
+            #     "Blindleistung L2": "useclip005f0050 kVAR",
+            #     "Blindleistung L3": "useclip005f0057 kVAR",
+            # },
+            # "Spannungen": {
+            #     "Spannung L1-L2": "useclip005f0034 V",
+            #     "Spannung L2-L3": "useclip005f003b V",
+            #     "Spannung L3-L1": "useclip005f0042 V",
+            # },
+            # "Scheinleistung/Energie": {
+            #     "Scheinleistung L1": "useclip005f000a kVA",
+            #     "Scheinleistung L2": "useclip005f0011 kVA",
+            #     "Scheinleistung L3": "useclip005f0018 kVA",
+            # },
         }
         
         data = {}
@@ -406,65 +456,81 @@ class Bot:
                     check_bool = True
                     break
 
-        if check_bool == True:
-            data = {}
-            variabless = {
-                "Gesamtleistung L1..L3": "useclip0043007a kW",
-                "Scheinleistung Strom L1": "useclip00430073 A",
-                "Scheinleistung Strom L2": "useclip004300b1 A",
-                "Scheinleistung Strom L3": "useclip004300aa A",
+        # if check_bool == True:
+        #     data = {}
+        #     variabless = {
+        #         "Gesamtleistung L1..L3": "useclip0043007a kW",
+        #         "Scheinleistung Strom L1": "useclip00430073 A",
+        #         "Scheinleistung Strom L2": "useclip004300b1 A",
+        #         "Scheinleistung Strom L3": "useclip004300aa A",
                 
-                "Leistung": {
-                    "Leistung L1": "useclip0043005e kW",
-                    "Leistung L2": "useclip00430065 kW",
-                    "Leistung L3": "useclip0043006c kW",
-                },
-                "CosPhi/Frequenz/Harmonie": {
-                    "CosPhi L1": "useclip0043001f",
-                    "CosPhi L2": "useclip00430026",
-                    "CosPhi L3": "useclip0043002d",
-                },
-                "Blindleistung/Energie": {
-                    "Blindleistung L1": "useclip00430049 kVAR",
-                    "Blindleistung L2": "useclip00430050 kVAR",
-                    "Blindleistung L3": "useclip00430057 kVAR",
-                },
-                "Spannungen": {
-                    "Spannung L1-L2": "useclip00430034 V",
-                    "Spannung L2-L3": "useclip0043003b V",
-                    "Spannung L3-L1": "useclip00430042 V",
-                },
-                "Scheinleistung/Energie": {
-                    "Scheinleistung L1": "useclip0043000a kVA",
-                    "Scheinleistung L2": "useclip00430011 kVA",
-                    "Scheinleistung L3": "useclip00430018 kVA",
-                },
-            }
+        #         "Leistung": {
+        #             "Leistung L1": "useclip0043005e kW",
+        #             "Leistung L2": "useclip00430065 kW",
+        #             "Leistung L3": "useclip0043006c kW",
+        #         },
+        #         "CosPhi/Frequenz/Harmonie": {
+        #             "CosPhi L1": "useclip0043001f",
+        #             "CosPhi L2": "useclip00430026",
+        #             "CosPhi L3": "useclip0043002d",
+        #         },
+        #         "Blindleistung/Energie": {
+        #             "Blindleistung L1": "useclip00430049 kVAR",
+        #             "Blindleistung L2": "useclip00430050 kVAR",
+        #             "Blindleistung L3": "useclip00430057 kVAR",
+        #         },
+        #         "Spannungen": {
+        #             "Spannung L1-L2": "useclip00430034 V",
+        #             "Spannung L2-L3": "useclip0043003b V",
+        #             "Spannung L3-L1": "useclip00430042 V",
+        #         },
+        #         "Scheinleistung/Energie": {
+        #             "Scheinleistung L1": "useclip0043000a kVA",
+        #             "Scheinleistung L2": "useclip00430011 kVA",
+        #             "Scheinleistung L3": "useclip00430018 kVA",
+        #         },
+        #     }
             
-            data = {}
-            for key, value in variabless.items():
-                if isinstance(value, dict):
-                    data[key] = self.scrap_data21(value)
-                else :
-                    data[key] = self.scrap_data1(value)
+        #     data = {}
+        #     for key, value in variabless.items():
+        #         if isinstance(value, dict):
+        #             data[key] = self.scrap_data21(value)
+        #         else :
+        #             data[key] = self.scrap_data1(value)
         return data
+    
+    def process_browser_logs_for_network_events(self,logs):
+        """
+        Return only logs which have a method that start with "Network.response", "Network.request", or "Network.webSocket"
+        since we're interested in the network events specifically.
+        """
+        for entry in logs:
+            log = json.loads(entry["message"])["message"]
+            if (
+                    "Network.response" in log["method"]
+            ):
+                yield log
+
 
     async def return_main_data_for_all_windows_parallel_helper(self, win):
         self.driver.switch_to.window(win)
-        if self.driver.current_window_handle == self.diff_window:
-            Energie_Tarif_1 = self.find_element('useclip00760040 id', 'useclip00760040', By.ID)
-            Wirkleistung_Total = self.find_element('useclip00760039 id', 'useclip00760039', By.ID)
-            return {
-                'Energie Tarif 1': f'{Energie_Tarif_1.text.strip()} W',
-                'Wirkleistung Total': f'{Wirkleistung_Total.text.strip()} kWh'
-            }
+        # self.driver.get_log()
+        # if self.driver.current_window_handle == self.diff_window:
+        #     Energie_Tarif_1 = self.find_element('useclip00760040 id', 'useclip00760040', By.ID)
+        #     Wirkleistung_Total = self.find_element('useclip00760039 id', 'useclip00760039', By.ID)
+        #     return {
+        #         'Energie Tarif 1': f'{Energie_Tarif_1.text.strip()} W',
+        #         'Wirkleistung Total': f'{Wirkleistung_Total.text.strip()} kWh'
+        #     }
         return self.return_main_data()
 
     async def return_main_data_for_all_windows_parallel(self):
         with ThreadPoolExecutor() as executor:
-            tasks = [self.return_main_data_for_all_windows_parallel_helper(win) for win in self.track_window_list]
+            loop = asyncio.get_event_loop()
+            tasks = [loop.run_in_executor(executor, self.return_main_data_for_all_windows_parallel_helper, win) for win in self.track_window_list]
             results = await asyncio.gather(*tasks)
         return results
+
     
     def write_json_file(self, filepath, data):
         lock = FileLock(filepath + ".lock")
@@ -479,12 +545,14 @@ class Bot:
 
     
     async def write_data_in_json(self):
+        self.driver.switch_to.window(self.track_window_list[0])
         while True:
             filepath = 'data.json'
-            main_data = await self.return_main_data_for_all_windows_parallel()
-            print(main_data)
+            # main_data = await self.return_main_data_for_all_windows_parallel()
+            main_data = self.return_main_data()
             if main_data:
                 self.write_json_file(filepath, main_data)
+                time.sleep(0.3)
                 
     def scrap_data1(self,  value : str):
         rt_v = ''
