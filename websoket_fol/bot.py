@@ -546,12 +546,12 @@ class Bot:
     
     async def write_data_in_json(self):
         self.driver.switch_to.window(self.track_window_list[0])
+        from api import base_path
         while True:
-            filepath = 'data.json'
             # main_data = await self.return_main_data_for_all_windows_parallel()
             main_data = self.return_main_data()
             if main_data:
-                self.write_json_file(filepath, main_data)
+                self.write_json_file(base_path, main_data)
                 time.sleep(0.3)
                 
     def scrap_data1(self,  value : str):

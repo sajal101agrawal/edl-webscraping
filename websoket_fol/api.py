@@ -111,6 +111,10 @@ import websockets
 import time
 from filelock import FileLock
 
+base_path = os.path.join(os.getcwd(), 'data.json')
+if not os.path.isfile(base_path):
+    with open(base_path, 'w') as file:
+        json.dump({}, file, indent=4)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -169,7 +173,7 @@ async def echo(websocket, path):
     def get_file_modification_time(filepath):
         return os.path.getmtime(filepath)
 
-    filepath = 'data.json'
+    filepath = base_path
     last_mod_time = get_file_modification_time(filepath)
     connected.add(websocket)
     try:
