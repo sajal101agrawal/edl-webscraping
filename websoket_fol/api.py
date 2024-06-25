@@ -112,8 +112,8 @@ import time
 from filelock import FileLock
 
 # base_path = os.path.join(os.getcwd(), 'data.json')
-# base_path = '/home/DickiData/edl-webscraping/websoket_fol/data.json'
-base_path = 'D:\\Workplace\\edl-webscraping\\data.json'
+base_path = '/home/DickiData/edl-webscraping/websoket_fol/data.json'
+# base_path = 'D:\\Workplace\\edl-webscraping\\data.json'
 if not os.path.isfile(base_path):
     with open(base_path, 'w') as file:
         json.dump({}, file, indent=4)
