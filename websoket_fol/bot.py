@@ -19,6 +19,16 @@ logging.basicConfig(filename='api.log',level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 import random, time
+from pymongo import MongoClient
+
+db_ip = "localhost"
+db_username = ""
+db_pass = ""
+
+client = MongoClient(host=db_ip, username=db_username, password=db_pass)
+pfm_db = client.edl_database
+collection = pfm_db['edl_collection']
+
 
 
 def random_sleep(a=5, b=9):
@@ -95,7 +105,7 @@ class Bot:
             options.add_argument("--mute-audio")
             options.add_argument("--ignore-gpu-blocklist")
             options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--headless")
+            # options.add_argument("--headless")
             prefs = {
                 "credentials_enable_service": True,
                 "profile.default_content_setting_values.automatic_downloads": 1,
@@ -358,7 +368,7 @@ class Bot:
                 main_window = self.driver.window_handles[0]
                 logging.info(main_window)
                 self.driver.switch_to.frame(iframe)
-                all_btn_id = ['group_f0000006' ]
+                all_btn_id = ['group_f0000006', 'group_f0000010' ]
                 # all_btn_id = ['group_f0000006','group_f0000005','group_f0000007', 'group_f0000008','group_f0000009',
                 #             'group_f000000a', 'group_f000000b', 'group_f000000c', 'group_f000000d', ]
                 previous_len = 1
@@ -373,6 +383,8 @@ class Bot:
                             raise RuntimeError("The number of driver's windows did not increase as expected.")
                     previous_len = len(self.driver.window_handles) 
                 for i in self.driver.window_handles[1:]: self.track_window_list.append(i)
+                self.diff_window  = self.driver.window_handles[-1]
+
                 # random_sleep()
                 # self.click_element('info', 'group_f000000f', By.ID)
                 # self.random_sleep(7)
@@ -515,21 +527,44 @@ class Bot:
     async def return_main_data_for_all_windows_parallel_helper(self, win):
         self.driver.switch_to.window(win)
         # self.driver.get_log()
-        # if self.driver.current_window_handle == self.diff_window:
-        #     Energie_Tarif_1 = self.find_element('useclip00760040 id', 'useclip00760040', By.ID)
-        #     Wirkleistung_Total = self.find_element('useclip00760039 id', 'useclip00760039', By.ID)
-        #     return {
-        #         'Energie Tarif 1': f'{Energie_Tarif_1.text.strip()} W',
-        #         'Wirkleistung Total': f'{Wirkleistung_Total.text.strip()} kWh'
-        #     }
+        if self.driver.current_window_handle == self.diff_window:
+            Energie_Tarif_1 = self.driver.find_element(By.ID, 'useclip008100cf')
+            Wirkleistung_Total = self.driver.find_element(By.ID, 'useclip008100d9')
+            return {
+                'Energie Tarif 1': f'{Energie_Tarif_1.text} kWh',
+                'Wirkleistung Total': f'{Wirkleistung_Total.text} W'
+            }
         return self.return_main_data()
+    
+    async def new_return_main_data_for_all_windows_parallel_helper(self, win):
+        self.driver.switch_to.window(win)
+        # self.driver.get_log()
+        if self.driver.current_window_handle == self.diff_window:
+            Energie_Tarif_1 = self.driver.find_element(By.ID, 'useclip008100cf')
+            Wirkleistung_Total = self.driver.find_element(By.ID, 'useclip008100d9')
+            return {
+                'Energie Tarif 1': f'{Energie_Tarif_1.text} W',
+                'Wirkleistung Total': f'{Wirkleistung_Total.text} kWh'
+            }
+        return self.return_main_data()
+    
+    async def new_return_main_data_for_all_windows_parallel(self):
+        old_result = []
+        while True:
+            tasks = [self.new_return_main_data_for_all_windows_parallel_helper(win) for win in self.track_window_list]
+            results = await asyncio.gather(*tasks)
+            if old_result != results:
+                print(results)
+                # insert in mongodb logic
+                old_result =results
+
+
 
     async def return_main_data_for_all_windows_parallel(self):
-        with ThreadPoolExecutor() as executor:
-            loop = asyncio.get_event_loop()
-            tasks = [loop.run_in_executor(executor, self.return_main_data_for_all_windows_parallel_helper, win) for win in self.track_window_list]
-            results = await asyncio.gather(*tasks)
-        return results
+        tasks = [self.return_main_data_for_all_windows_parallel_helper( win) for win in self.track_window_list]
+        results = await asyncio.gather(*tasks)
+        main_data = {k: v for d in results for k, v in d.items()}
+        return main_data
 
     
     def write_json_file(self, filepath, data):
@@ -547,12 +582,16 @@ class Bot:
     async def write_data_in_json(self):
         self.driver.switch_to.window(self.track_window_list[0])
         from api import base_path
+        old_result = []
         while True:
-            # main_data = await self.return_main_data_for_all_windows_parallel()
-            main_data = self.return_main_data()
+            main_data = await self.return_main_data_for_all_windows_parallel()
+            # main_data = self.return_main_data()
             if main_data:
                 self.write_json_file(base_path, main_data)
-                time.sleep(0.3)
+                if old_result != main_data:
+                    # insert in mongodb logic
+                    collection.insert_one(main_data)
+                    old_result =main_data
                 
     def scrap_data1(self,  value : str):
         rt_v = ''

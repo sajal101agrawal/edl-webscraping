@@ -32,6 +32,7 @@ async def scrape():
             bot_.get_driver()  # Assuming get_driver is synchronous
             bot_.work()        # Assuming work is synchronous
             await bot_.write_data_in_json()  # Assuming write_data_in_json is asynchronous
+            # await bot_.new_return_main_data_for_all_windows_parallel()
         except Exception as e:
             print(f"An error occurred during scraping: {e}")
         finally:
