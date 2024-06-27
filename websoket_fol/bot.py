@@ -12,6 +12,7 @@ from selenium.webdriver.chrome.service import Service
 from concurrent.futures import ThreadPoolExecutor
 from selenium.webdriver.common.action_chains import ActionChains
 import logging
+from datetime import datetime, timezone
 from filelock import FileLock
 
 
@@ -564,6 +565,7 @@ class Bot:
         tasks = [self.return_main_data_for_all_windows_parallel_helper( win) for win in self.track_window_list]
         results = await asyncio.gather(*tasks)
         main_data = {k: v for d in results for k, v in d.items()}
+        main_data["timestamp"] = datetime.now(timezone.utc).isoformat()
         return main_data
 
     
