@@ -26,7 +26,6 @@ def kill_chrome_drivers():
         print(f"An error occurred: {e}")
 
 async def scrape():
-    # while True:
         try:
             bot_ = Bot()
             bot_.get_driver()  # Assuming get_driver is synchronous

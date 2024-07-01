@@ -582,18 +582,29 @@ class Bot:
 
     
     async def write_data_in_json(self):
+        import time
         self.driver.switch_to.window(self.track_window_list[0])
         from api import base_path
         old_result = []
+        save_count = 10
+        total_time = 0
         while True:
+            start_time = time.time()
             main_data = await self.return_main_data_for_all_windows_parallel()
             # main_data = self.return_main_data()
             if main_data:
                 self.write_json_file(base_path, main_data)
-                if old_result != main_data:
+                if old_result != main_data and  total_time >= save_count:
                     # insert in mongodb logic
                     collection.insert_one(main_data)
                     old_result =main_data
+                    total_time = 0
+            end_time = time.time()
+            total_time += end_time - start_time
+
+
+
+
                 
     def scrap_data1(self,  value : str):
         rt_v = ''
